@@ -21,6 +21,7 @@ export default function PostCard({
   onRequestDelete?: (id: string) => void;
 }) {
   const [liked, setLiked] = useState(post.isLiked);
+  const isMine = post.canDelete || post.user?.id === 'u_me';
 
   return (
     <article className="border border-gray-800 rounded-lg overflow-hidden">
@@ -40,12 +41,16 @@ export default function PostCard({
 
         {/* More (tap to request delete) */}
         <button
-          className="p-2 rounded hover:bg-gray-800"
-          onClick={() => onRequestDelete?.(post.id)} // ✅ just call it
-          aria-label="More"
-        >
-          <EllipsisHorizontalIcon className="w-5 h-5 text-gray-300" />
-        </button>
+  className="p-2 rounded hover:bg-gray-800"
+  aria-label="More"
+  onClick={() => {
+    if (isMine) onRequestDelete?.(post.id);   // ✅ only your post can delete
+    else onOpenDetail?.();                    // others: open detail (or ignore)
+  }}
+  title={isMine ? 'Delete post' : 'View post'}
+>
+  <EllipsisHorizontalIcon className="w-5 h-5 text-gray-300" />
+</button>
       </div>
 
       {/* media (first only for feed) */}

@@ -28,18 +28,23 @@ export default function Feed() {
 
   // initial load + on category change
   useEffect(() => {
+    let mounted = true;
     (async () => {
       setLoading(true);
       const res = await mockGetFeed({ limit: 5, offset: 0, category });
+      if (!mounted) return;
       setPosts(res.data.posts);
       setOffset(res.data.posts.length);
       setHasMore(res.data.hasMore);
       setLoading(false);
     })();
+    return () => {
+      mounted = false;
+    };
   }, [category]);
 
   const loadMore = async () => {
-    if (loading) return;
+    if (loading || !hasMore) return;
     setLoading(true);
     const res = await mockGetFeed({ limit: 5, offset, category });
     setPosts((p) => [...p, ...res.data.posts]);
@@ -60,7 +65,7 @@ export default function Feed() {
     // mock backend (later replace with DELETE /posts/:id)
     const res = await mockDeletePost(id);
     if (!res.success) {
-      // optional rollback/toast
+      // optional: toast/rollback
       console.warn('Delete failed (mock).');
     }
   };
@@ -96,7 +101,7 @@ export default function Feed() {
             key={p.id}
             post={p}
             onOpenDetail={() => setSelected(p.id)}
-            onRequestDelete={(id) => setOpenDeleteId(id)}
+            onRequestDelete={(id) => setOpenDeleteId(id)} // only mine will trigger inside PostCard
           />
         ))}
 
@@ -121,7 +126,7 @@ export default function Feed() {
       <PostDetailDrawer
         postId={selected}
         onClose={() => setSelected(null)}
-        onRequestDelete={(id) => setOpenDeleteId(id)}
+        onRequestDelete={(id) => setOpenDeleteId(id)} // delete from inside drawer (only mine)
       />
 
       {/* ===== Delete confirm ===== */}

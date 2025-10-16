@@ -9,11 +9,14 @@ export type UserProfile = {
   avatarUrl?: string;
 };
 
-export type Comment = {
+export type PostComment = {
   id: string;
   user: UserProfile;
   text: string;
   createdAt: string;
+parentCommentId?: string;
+  repliesCount?: number;  // for UI
+  canDelete?: boolean; 
 };
 
 export type PostDetail = {
@@ -29,4 +32,5 @@ export type PostDetail = {
   createdAt: string;
   updatedAt: string;
   comments?: Comment[];
+  canDelete?: boolean; 
 };

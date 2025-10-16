@@ -4,15 +4,16 @@ import { useEffect, useState } from 'react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import { PostDetail } from './../types/posts';          // ✅ fix path
 import { mockGetPost } from '@/utils/mockApi';
+import PostComments from '@/components/PostComments';
 
 export default function PostDetailDrawer({
   postId,
   onClose,
-  onRequestDelete,                                  // ✅ new prop
+  onRequestDelete,                      // ✅ NEW
 }: {
   postId: string | null;
   onClose: () => void;
-  onRequestDelete?: (id: string) => void;          // ✅ new prop type
+  onRequestDelete?: (id: string) => void; // ✅ NEW
 }) {
   const [post, setPost] = useState<PostDetail | null>(null);
 
@@ -34,7 +35,7 @@ export default function PostDetailDrawer({
         <div className="flex items-center justify-between px-4 py-3 border-b border-gray-800">
           <div className="text-white font-semibold">Post</div>
           <div className="flex items-center gap-2">
-            {post && (
+            {post && (post.canDelete || post.user.id === 'u_me') &&  (
               <button
                 onClick={() => onRequestDelete?.(post.id)}   // ✅ call parent trigger
                 className="px-3 py-1.5 text-sm rounded bg-red-600 hover:bg-red-500 text-white"
@@ -73,7 +74,7 @@ export default function PostDetailDrawer({
                 <p className="text-sm mt-3 whitespace-pre-wrap">{post.content}</p>
               </div>
 
-              <div className="flex-1 overflow-auto p-4 space-y-3">
+              {/* <div className="flex-1 overflow-auto p-4 space-y-3">
                 {(post.comments || []).map((c) => (
                   <div key={c.id} className="flex items-start gap-3">
                     <img
@@ -90,7 +91,8 @@ export default function PostDetailDrawer({
                     </div>
                   </div>
                 ))}
-              </div>
+              </div> */}
+              <PostComments postId={post.id} />
 
               <div className="p-3 border-t border-gray-800">
                 <input
