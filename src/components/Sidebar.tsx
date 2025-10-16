@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
-import { 
-  HomeIcon, 
-  MagnifyingGlassIcon, 
+import { useEffect, useMemo, useRef, useState } from 'react';
+import {
+  HomeIcon,
+  MagnifyingGlassIcon,
   MapIcon,
   PlayIcon,
   ChatBubbleLeftRightIcon,
@@ -11,106 +11,266 @@ import {
   PlusCircleIcon,
   UserCircleIcon,
   Bars3Icon,
-  Squares2X2Icon
+  Squares2X2Icon,
+  XMarkIcon,
 } from '@heroicons/react/24/outline';
 
+type NavId =
+  | 'home'
+  | 'search'
+  | 'explore'
+  | 'reels'
+  | 'messages'
+  | 'notifications'
+  | 'create'
+  | 'profile'
+  | 'more'
+  | 'also-from-meta';
+
 interface SidebarProps {
-  currentPage?: string;
+  currentPage?: NavId; // default: 'profile'
 }
 
 export default function Sidebar({ currentPage = 'profile' }: SidebarProps) {
   const [unreadMessages] = useState(9);
+  const [active, setActive] = useState<NavId>(currentPage);
+  const [query, setQuery] = useState('');
+  const [recent, setRecent] = useState<string[]>(['https_owais']);
+  const searchInputRef = useRef<HTMLInputElement | null>(null);
 
-  const navigationItems = [
-    { id: 'home', label: 'Home', icon: HomeIcon, active: false },
-    { id: 'search', label: 'Search', icon: MagnifyingGlassIcon, active: false },
-    { id: 'explore', label: 'Explore', icon: MapIcon, active: false },
-    { id: 'reels', label: 'Reels', icon: PlayIcon, active: false },
-    { 
-      id: 'messages', 
-      label: 'Messages', 
-      icon: ChatBubbleLeftRightIcon, 
-      active: false,
-      badge: unreadMessages > 0 ? `${unreadMessages}+` : null
-    },
-    { id: 'notifications', label: 'Notifications', icon: HeartIcon, active: false },
-    { id: 'create', label: 'Create', icon: PlusCircleIcon, active: false },
-    { id: 'profile', label: 'Profile', icon: UserCircleIcon, active: currentPage === 'profile' },
-  ];
+  // Focus input when search opens
+  useEffect(() => {
+    if (active === 'search') {
+      const t = setTimeout(() => searchInputRef.current?.focus(), 50);
+      return () => clearTimeout(t);
+    }
+  }, [active]);
+
+  const navigationItems = useMemo(
+    () => [
+      { id: 'home' as const, label: 'Home', icon: HomeIcon },
+      { id: 'search' as const, label: 'Search', icon: MagnifyingGlassIcon },
+      { id: 'explore' as const, label: 'Explore', icon: MapIcon },
+      { id: 'reels' as const, label: 'Reels', icon: PlayIcon },
+      {
+        id: 'messages' as const,
+        label: 'Messages',
+        icon: ChatBubbleLeftRightIcon,
+        badge: unreadMessages > 0 ? `${unreadMessages}+` : null,
+      },
+      { id: 'notifications' as const, label: 'Notifications', icon: HeartIcon },
+      { id: 'create' as const, label: 'Create', icon: PlusCircleIcon },
+      { id: 'profile' as const, label: 'Profile', icon: UserCircleIcon },
+    ],
+    [unreadMessages]
+  );
+
+  const onClickItem = (id: NavId) => {
+    if (id === 'search') {
+      setActive((prev) => (prev === 'search' ? currentPage : 'search')); // toggle search
+      return;
+    }
+    setActive(id);
+  };
+
+  const submitSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!query.trim()) return;
+    setRecent((prev) => {
+      const next = [query.trim(), ...prev.filter((r) => r !== query.trim())];
+      return next.slice(0, 8);
+    });
+    // yahan tum navigate ya fetch kara sakte ho
+  };
+
+  const removeRecent = (name: string) =>
+    setRecent((prev) => prev.filter((r) => r !== name));
+
+  const clearAll = () => setRecent([]);
 
   return (
-    <div className="fixed left-0 top-0 h-full w-64 bg-black border-r border-gray-800 flex flex-col">
-      {/* Instagram Logo */}
-      <div className="p-6">
-        <h1 className="text-2xl italic font-bold text-white font-serif">FastGram</h1>
-      </div>
+    <>
+      {/* LEFT NAV BAR */}
+      <div className="fixed left-0 top-0 h-full w-64 bg-black border-r border-gray-800 flex flex-col z-30">
+        {/* Logo */}
+        <div className="p-6">
+          <h1 className="text-2xl italic font-bold text-white font-serif">
+            FastGram
+          </h1>
+        </div>
 
-      {/* Navigation Items */}
-      <nav className="flex-1 px-4">
-        <ul className="space-y-1">
-          {navigationItems.map((item) => {
-            const Icon = item.icon;
-            return (
-              <li key={item.id}>
-                <a
-                  href="#"
-                  className={`flex items-center px-4 py-3 text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-colors ${
-                    item.active ? 'text-white bg-gray-800' : ''
-                  }`}
-                >
-                  <Icon className="w-6 h-6 mr-3" />
-                  <span className="font-medium">{item.label}</span>
-                  {item.badge && (
-                    <span className="ml-auto bg-red-500 text-white text-xs px-2 py-1 rounded-full">
-                      {item.badge}
-                    </span>
-                  )}
-                </a>
-              </li>
-            );
-          })}
-        </ul>
+        {/* Nav */}
+        <nav className="flex-1 px-4">
+          <ul className="space-y-1">
+            {navigationItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = active === item.id;
+              return (
+                <li key={item.id}>
+                  <button
+                    type="button"
+                    onClick={() => onClickItem(item.id)}
+                    className={`w-full flex items-center px-4 py-3 text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-colors ${
+                      isActive ? 'text-white bg-gray-800' : ''
+                    }`}
+                  >
+                    <Icon className="w-6 h-6 mr-3" />
+                    <span className="font-medium">{item.label}</span>
+                    {'badge' in item && item.badge && (
+                      <span className="ml-auto bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+                        {item.badge}
+                      </span>
+                    )}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
 
         {/* Separator */}
-        <div className="border-t border-gray-800 my-4"></div>
+          <div className="border-t border-gray-800 my-4"></div>
 
-        {/* More Options */}
-        <ul className="space-y-1">
-          <li>
-            <a
-              href="#"
-              className="flex items-center px-4 py-3 text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
-            >
-              <Bars3Icon className="w-6 h-6 mr-3" />
-              <span className="font-medium">More</span>
-            </a>
-          </li>
-          <li>
-            <a
-              href="#"
-              className="flex items-center px-4 py-3 text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
-            >
-              <Squares2X2Icon className="w-6 h-6 mr-3" />
-              <span className="font-medium">Also from Meta</span>
-            </a>
-          </li>
-        </ul>
-      </nav>
+          {/* More */}
+          <ul className="space-y-1">
+            <li>
+              <button
+                type="button"
+                onClick={() => onClickItem('more')}
+                className="w-full flex items-center px-4 py-3 text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
+              >
+                <Bars3Icon className="w-6 h-6 mr-3" />
+                <span className="font-medium">More</span>
+              </button>
+            </li>
+            <li>
+              <button
+                type="button"
+                onClick={() => onClickItem('also-from-meta')}
+                className="w-full flex items-center px-4 py-3 text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
+              >
+                <Squares2X2Icon className="w-6 h-6 mr-3" />
+                <span className="font-medium">Also from Meta</span>
+              </button>
+            </li>
+          </ul>
+        </nav>
 
-      {/* User Profile at Bottom */}
-      <div className="p-4 border-t border-gray-800">
-        <div className="flex items-center px-4 py-3">
-          <img
-            src="/images/portrait-avatar.png"
-            alt="Profile"
-            className="w-8 h-8 rounded-full mr-3"
-          />
-          <div>
-            <div className="text-white font-medium text-sm">muhib_ali</div>
-            <div className="text-gray-400 text-xs">Muhib Ali</div>
+        {/* Bottom user */}
+        <div className="p-4 border-t border-gray-800">
+          <div className="flex items-center px-4 py-3">
+            <img
+              src="/images/portrait-avatar.png"
+              alt="Profile"
+              className="w-8 h-8 rounded-full mr-3"
+            />
+            <div>
+              <div className="text-white font-medium text-sm">muhib_ali</div>
+              <div className="text-gray-400 text-xs">Muhib Ali</div>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+
+      {/* SEARCH SIDE PANEL (appears when Search active) */}
+      {active === 'search' && (
+        <div
+          className="
+            fixed top-0 left-64 h-full w-[24rem]
+            bg-black border-r border-gray-800 z-20
+            flex flex-col
+          "
+          aria-label="Search panel"
+        >
+          {/* Header */}
+          <div className="px-6 pt-6 pb-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-semibold text-white">Search</h2>
+              <button
+                type="button"
+                onClick={() => setActive(currentPage)}
+                className="p-2 rounded hover:bg-gray-800"
+                aria-label="Close search"
+              >
+                <XMarkIcon className="w-5 h-5 text-gray-300" />
+              </button>
+            </div>
+
+            {/* Input */}
+            <form onSubmit={submitSearch} className="mt-4">
+              <div className="relative">
+                <input
+                  ref={searchInputRef}
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Search"
+                  className="w-full bg-gray-900 text-white placeholder-gray-500 rounded-xl py-2.5 pl-4 pr-10 outline-none border border-gray-800 focus:border-gray-600"
+                />
+                {query && (
+                  <button
+                    type="button"
+                    onClick={() => setQuery('')}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-200"
+                    aria-label="Clear query"
+                  >
+                    <XMarkIcon className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+            </form>
+          </div>
+
+          <div className="border-t border-gray-800" />
+
+          {/* Recent */}
+          <div className="flex-1 overflow-auto px-6 py-4">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-gray-400 text-sm">Recent</span>
+              {recent.length > 0 && (
+                <button
+                  type="button"
+                  onClick={clearAll}
+                  className="text-blue-400 text-xs hover:underline"
+                >
+                  Clear all
+                </button>
+              )}
+            </div>
+
+            {recent.length === 0 ? (
+              <div className="text-gray-500 text-sm">No recent searches.</div>
+            ) : (
+              <ul className="space-y-2">
+                {recent.map((r) => (
+                  <li
+                    key={r}
+                    className="flex items-center justify-between px-2 py-2 rounded-lg hover:bg-gray-900"
+                  >
+                    <div className="flex items-center gap-3">
+                      <img
+                        src="/images/person-headshot.png"
+                        alt=""
+                        className="w-8 h-8 rounded-full"
+                      />
+                      <div className="text-sm">
+                        <div className="text-white">{r}</div>
+                        <div className="text-gray-500 text-xs">Following</div>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => removeRecent(r)}
+                      className="p-1.5 rounded hover:bg-gray-800 text-gray-400"
+                      aria-label={`Remove ${r}`}
+                    >
+                      <XMarkIcon className="w-4 h-4" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+      )}
+    </>
   );
 }
