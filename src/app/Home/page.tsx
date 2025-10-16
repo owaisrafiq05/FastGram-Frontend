@@ -12,6 +12,7 @@ import {
 } from '@heroicons/react/24/outline';
 import Image from 'next/image';
 import { useState } from 'react';
+import Feed from './../../components/Feed'
 
 type Story = { id: string; name: string; avatar: string; hasNew?: boolean };
 type Post = {
@@ -77,9 +78,7 @@ export default function HomePage() {
               <StoriesBar stories={mockStories} />
 
               <div className="space-y-6 mt-6 pb-10">
-                {mockPosts.map((post) => (
-                  <FeedPost key={post.id} post={post} />
-                ))}
+                  <Feed />
               </div>
             </main>
 

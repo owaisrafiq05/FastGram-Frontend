@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation'; // ✅ add
+import CreatePostModal from './CreatePostModal';
+import {mockCreatePost} from './../utils/mockApi'
 import {
   HomeIcon, MagnifyingGlassIcon, MapIcon, PlayIcon,
   ChatBubbleLeftRightIcon, HeartIcon, PlusCircleIcon, UserCircleIcon,
@@ -21,6 +23,7 @@ export default function Sidebar({ currentPage = 'profile' }: SidebarProps) {
   const [query, setQuery] = useState('');
   const [recent, setRecent] = useState<string[]>(['https_owais']);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
+    const [openCreate, setOpenCreate] = useState(false);
 
   // ✅ map nav IDs to routes (adjust to your folders)
   const routeById: Partial<Record<NavId, string>> = {
@@ -62,9 +65,14 @@ export default function Sidebar({ currentPage = 'profile' }: SidebarProps) {
       setActive(prev => (prev === 'search' ? currentPage : 'search'));
       return;
     }
+    if (id === 'create') {
+      setOpenCreate(true);          
+      setActive(id);
+      return;
+    }
     setActive(id);
     const href = routeById[id];
-    if (href) router.push(href);   // ✅ navigate
+    if (href) router.push(href);  
   };
 
   const submitSearch = (e: React.FormEvent) => {
@@ -193,6 +201,15 @@ export default function Sidebar({ currentPage = 'profile' }: SidebarProps) {
           {/* ... recent list as you already have ... */}
         </div>
       )}
+        <CreatePostModal
+    open={openCreate}
+    onClose={() => setOpenCreate(false)}
+       onCreateLocal={async (payload) => {
+    await mockCreatePost(payload); // later: replace with real POST /posts
+    // optional: navigate or toast
+    // router.refresh(); // if using server components
+  }}
+  />
     </>
   );
 }
