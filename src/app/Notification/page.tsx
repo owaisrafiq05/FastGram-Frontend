@@ -35,7 +35,7 @@ export default function NotificationSettings() {
             {/* In-App Notifications Section */}
             <div className="mb-8">
               <h3 className="text-lg font-semibold mb-4 text-gray-100">In-App Notifications</h3>
-              <div className="space-y-3 bg-gray-950 border border-gray-800 rounded-xl p-6">
+              <div className="space-y-3 bg-black border border-gray-800 rounded-xl p-6">
                 {Object.entries({
                   likeNotifications: {
                     label: "Likes on your posts",
@@ -57,7 +57,7 @@ export default function NotificationSettings() {
                 }).map(([key, { label, description }]) => (
                   <div
                     key={key}
-                    className="flex items-center justify-between p-4 bg-gray-900 border border-gray-800 rounded-lg hover:bg-gray-800 hover:border-gray-700 transition-all duration-200"
+                    className="flex items-center justify-between p-4 bg-[#262626] border border-gray-800 rounded-lg hover:bg-gray-800 hover:border-gray-700 transition-all duration-200"
                   >
                     <div className="flex-1">
                       <p className="text-sm font-medium text-white">{label}</p>
@@ -81,8 +81,8 @@ export default function NotificationSettings() {
             {/* Email Notifications Section */}
             <div className="mb-8">
               <h3 className="text-lg font-semibold mb-4 text-gray-100">Email Notifications</h3>
-              <div className="bg-gray-950 border border-gray-800 rounded-xl p-6">
-                <div className="flex items-center justify-between p-4 bg-gray-900 border border-gray-800 rounded-lg hover:bg-gray-800 hover:border-gray-700 transition-all duration-200">
+              <div className="bg-black border border-gray-800 rounded-xl p-6">
+                <div className="flex items-center justify-between p-4 bg-[#262626] border border-gray-800 rounded-lg hover:bg-gray-800 hover:border-gray-700 transition-all duration-200">
                   <div className="flex-1">
                     <p className="text-sm font-medium text-white">Email updates & announcements</p>
                     <p className="text-xs text-gray-500 mt-1">Receive important updates and announcements via email</p>
@@ -103,7 +103,7 @@ export default function NotificationSettings() {
 
             {/* Action Buttons */}
             <div className="flex gap-3 pt-4">
-              <button className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-6 rounded-lg transition-colors duration-200 shadow-lg hover:shadow-blue-600/50">
+              <button className="bg-blue-800 hover:bg-blue-900 text-white font-semibold py-2.5 px-6 rounded-lg transition-colors duration-200 shadow-lg hover:shadow-blue-600/50">
                 Save Changes
               </button>
               <button className="bg-gray-800 hover:bg-gray-700 text-white font-semibold py-2.5 px-6 rounded-lg transition-colors duration-200 border border-gray-700">

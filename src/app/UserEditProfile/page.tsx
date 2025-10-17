@@ -90,9 +90,9 @@ export default function EditProfilePage() {
 
             <form onSubmit={handleSubmit} encType="multipart/form-data" className="space-y-8">
               {/* Avatar Section */}
-              <div className="bg-gray-900 rounded-lg p-6 border border-gray-800">
+              <div className="bg-black rounded-lg p-6 border border-gray-800">
                 <h3 className="text-sm font-semibold text-gray-300 mb-4 uppercase tracking-wide">Profile Picture</h3>
-                <div className="flex items-center gap-6">
+                <div className="flex items-center  justify-between bg-[#262626] py-3.5 rounded-4xl px-4 gap-6">
                   <div className="relative">
                     <img
                       src={profile.avatarPreview || "/images/portrait-avatar.png"}
@@ -111,7 +111,7 @@ export default function EditProfilePage() {
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
-                      className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200"
+                      className="bg-blue-800 hover:bg-blue-700 px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200"
                     >
                       Change Photo
                     </button>
@@ -121,43 +121,43 @@ export default function EditProfilePage() {
               </div>
 
               {/* Personal Information Section */}
-              <div className="bg-gray-900 rounded-lg p-6 border border-gray-800">
-                <h3 className="text-sm font-semibold text-gray-300 mb-4 uppercase tracking-wide">
+              <div className=" rounded-lg p-6 border border-gray-800">
+                <h3 className="text-sm font-bold text-gray-300 mb-4 uppercase tracking-wide">
                   Personal Information
                 </h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">First Name</label>
+                    <label className="block text-sm font-bold text-gray-300 mb-2">First Name</label>
                     <input
                       type="text"
                       name="firstName"
                       value={profile.firstName}
                       onChange={handleChange}
-                      className="w-full px-4 py-2.5 rounded-md bg-gray-800 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
+                      className="w-full px-4 py-2.5 rounded-md border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
                       placeholder="Enter first name"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Last Name</label>
+                    <label className="block text-sm font-bold text-gray-300 mb-2">Last Name</label>
                     <input
                       type="text"
                       name="lastName"
                       value={profile.lastName}
                       onChange={handleChange}
-                      className="w-full px-4 py-2.5 rounded-md bg-gray-800 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
+                      className="w-full px-4 py-2.5 rounded-md  border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
                       placeholder="Enter last name"
                     />
                   </div>
                 </div>
 
                 <div className="mt-4">
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Bio</label>
+                  <label className="block text-sm font-bold text-gray-300 mb-2">Bio</label>
                   <textarea
                     name="bio"
                     value={profile.bio}
                     onChange={handleChange}
-                    className="w-full px-4 py-2.5 rounded-md bg-gray-800 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors resize-none"
+                    className="w-full px-4 py-2.5 rounded-md  border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors resize-none"
                     placeholder="Tell us about yourself"
                     maxLength={150}
                     rows={3}
@@ -170,32 +170,32 @@ export default function EditProfilePage() {
               </div>
 
               {/* Academic Information Section */}
-              <div className="bg-gray-900 rounded-lg p-6 border border-gray-800">
-                <h3 className="text-sm font-semibold text-gray-300 mb-4 uppercase tracking-wide">
+              <div className=" rounded-lg p-6 border border-gray-800">
+                <h3 className="text-sm font-bold text-gray-300 mb-4 uppercase tracking-wide">
                   Academic Information
                 </h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Department</label>
+                    <label className="block text-sm font-bold text-gray-300 mb-2">Department</label>
                     <input
                       type="text"
                       name="department"
                       value={profile.department}
                       onChange={handleChange}
-                      className="w-full px-4 py-2.5 rounded-md bg-gray-800 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
+                      className="w-full px-4 py-2.5 rounded-md  border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
                       placeholder="e.g., Computer Science"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Semester</label>
+                    <label className="block text-sm font-bold text-gray-300 mb-2">Semester</label>
                     <input
                       type="number"
                       name="semester"
                       min={1}
                       value={profile.semester}
                       onChange={handleChange}
-                      className="w-full px-4 py-2.5 rounded-md bg-gray-800 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
+                      className="w-full px-4 py-2.5 rounded-md  border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
                       placeholder="e.g., 4"
                     />
                   </div>
@@ -215,7 +215,7 @@ export default function EditProfilePage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:cursor-not-allowed py-3 rounded-md font-semibold text-base transition-colors duration-200"
+                className="w-full bg-blue-800 hover:bg-blue-900 cursor-pointer disabled:bg-gray-700 disabled:cursor-not-allowed py-3 rounded-md font-semibold text-base transition-colors duration-200"
               >
                 {loading ? "Saving Changes..." : "Save Changes"}
               </button>

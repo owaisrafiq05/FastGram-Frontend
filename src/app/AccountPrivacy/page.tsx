@@ -34,7 +34,7 @@ export default function AccountPrivacy() {
 
             <div className="mb-8">
               <h3 className="text-lg font-semibold mb-4 text-gray-100">Account Privacy</h3>
-              <div className="space-y-3 bg-gray-900 border border-gray-800 rounded-xl p-6">
+              <div className="space-y-3 bg-[#262626] border border-gray-800 rounded-xl p-6">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="font-medium text-white">Private Account</p>
@@ -54,8 +54,8 @@ export default function AccountPrivacy() {
 
             <div className="mb-8">
               <h3 className="text-lg font-semibold mb-4 text-gray-100">Visibility</h3>
-              <div className="space-y-3 bg-gray-900 border border-gray-800 rounded-xl p-6">
-                <div className="flex items-center justify-between pb-4 border-b border-gray-800">
+              <div className="space-y-3 bg-[#262626] border border-gray-800 rounded-xl p-6">
+                <div className="flex items-center justify-between pb-4 border-b border-gray-600">
                   <div>
                     <p className="font-medium text-white">Show Last Seen</p>
                     <p className="text-xs text-gray-400 mt-1">Let others see when you were last active</p>
@@ -70,7 +70,7 @@ export default function AccountPrivacy() {
                   </button>
                 </div>
 
-                <div className="flex items-center justify-between pb-4 border-b border-gray-800">
+                <div className="flex items-center justify-between pb-4 border-b border-gray-600">
                   <div>
                     <p className="font-medium text-white">Show Activity Status</p>
                     <p className="text-xs text-gray-400 mt-1">Display when you're online or active</p>
@@ -104,7 +104,7 @@ export default function AccountPrivacy() {
 
             <div className="mb-8">
               <h3 className="text-lg font-semibold mb-4 text-gray-100">Messaging</h3>
-              <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
+              <div className="bg-[#262626] border border-gray-800 rounded-xl p-6">
                 <label className="block mb-3">
                   <p className="font-medium text-white mb-2">Allow Messages From</p>
                   <p className="text-xs text-gray-400 mb-3">Control who can send you direct messages</p>
@@ -112,7 +112,7 @@ export default function AccountPrivacy() {
                 <select
                   value={privacy.allowMessagesFrom}
                   onChange={(e) => setPrivacy((prev) => ({ ...prev, allowMessagesFrom: e.target.value }))}
-                  className="w-full bg-gray-800 border border-gray-700 text-white px-4 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 transition-all"
+                  className="w-full bg-[black] border border-gray-700 text-white px-4 py-2.5 rounded-lg focus:outline-none focus:ring-2  transition-all"
                 >
                   <option value="everyone">Everyone</option>
                   <option value="followers">Followers Only</option>
@@ -122,7 +122,7 @@ export default function AccountPrivacy() {
             </div>
 
             <div className="flex gap-3 pt-4">
-              <button className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-6 rounded-lg transition-colors">
+              <button className="bg-blue-800 hover:bg-blue-900 text-white font-semibold py-2.5 px-6 rounded-lg transition-colors">
                 Save Changes
               </button>
               <button className="bg-gray-800 hover:bg-gray-700 text-white font-semibold py-2.5 px-6 rounded-lg transition-colors border border-gray-700">
