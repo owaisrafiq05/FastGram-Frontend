@@ -1,5 +1,5 @@
 'use client';
-
+import { useRouter } from "next/navigation";
 import { useMemo, useState } from 'react';
 import { Cog6ToothIcon, PlusIcon, PlayIcon } from '@heroicons/react/24/outline';
 
@@ -27,6 +27,7 @@ type Props = {
 };
 
 export default function UserProfileHeader({ userProfile, isCurrentUser = true }: Props) {
+  const router = useRouter();
   // ---- Mock (used only when userProfile prop not provided) ----
   const mockProfile: UserProfile = {
     id: '1',
@@ -119,6 +120,7 @@ export default function UserProfileHeader({ userProfile, isCurrentUser = true }:
               {isCurrentUser ? (
                 <>
                   <button
+                  onClick={() => router.push('../UserEditProfile')}
                     type="button"
                     className="bg-gray-700 hover:bg-gray-600 text-white px-6 py-2 rounded-lg text-sm font-medium transition-colors"
                   >
