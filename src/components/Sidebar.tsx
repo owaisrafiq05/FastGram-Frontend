@@ -1,39 +1,39 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation'; // ✅ add
+import { useRouter } from 'next/navigation';
 import CreatePostModal from './CreatePostModal';
-import {mockCreatePost} from './../utils/mockApi'
+import { mockCreatePost } from './../utils/mockApi';
 import {
   HomeIcon, MagnifyingGlassIcon, MapIcon, PlayIcon,
   ChatBubbleLeftRightIcon, HeartIcon, PlusCircleIcon, UserCircleIcon,
-  Bars3Icon, Squares2X2Icon, XMarkIcon,
-} from '@heroicons/react/24/outline';
+  Cog6ToothIcon, Squares2X2Icon, XMarkIcon,
+} from '@heroicons/react/24/outline'; // ✅ replaced Bars3Icon with Cog6ToothIcon
 
 type NavId =
   | 'home' | 'search' | 'explore' | 'reels' | 'messages'
-  | 'notifications' | 'create' | 'profile' | 'more' | 'also-from-meta';
+  | 'notifications' | 'create' | 'profile' | 'settings' | 'also-from-meta'; // ✅ changed 'more' to 'settings'
 
 interface SidebarProps { currentPage?: NavId }
 
 export default function Sidebar({ currentPage = 'profile' }: SidebarProps) {
-  const router = useRouter();                       // ✅ init router
+  const router = useRouter();
   const [unreadMessages] = useState(9);
   const [active, setActive] = useState<NavId>(currentPage);
   const [query, setQuery] = useState('');
   const [recent, setRecent] = useState<string[]>(['https_owais']);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
-    const [openCreate, setOpenCreate] = useState(false);
+  const [openCreate, setOpenCreate] = useState(false);
 
-  // ✅ map nav IDs to routes (adjust to your folders)
   const routeById: Partial<Record<NavId, string>> = {
-    home: '/Home',                 // or '/' if your home is app/page.tsx
-    profile: '/UserProfile',      // rename folder to 'profile' if you want '/profile'
-    explore: '/Explore',           // only if such pages exist
+    home: '/Home',
+    profile: '/UserProfile',
+    explore: '/Explore',
     reels: '/Reels',
     messages: '/Messages',
     notifications: '/Notifications',
     create: '/Create',
+    settings: '/Settings', // ✅ optional: add a route if you have a settings page
   };
 
   useEffect(() => {
@@ -66,13 +66,13 @@ export default function Sidebar({ currentPage = 'profile' }: SidebarProps) {
       return;
     }
     if (id === 'create') {
-      setOpenCreate(true);          
+      setOpenCreate(true);
       setActive(id);
       return;
     }
     setActive(id);
     const href = routeById[id];
-    if (href) router.push(href);  
+    if (href) router.push(href);
   };
 
   const submitSearch = (e: React.FormEvent) => {
@@ -82,7 +82,6 @@ export default function Sidebar({ currentPage = 'profile' }: SidebarProps) {
       const next = [query.trim(), ...prev.filter(r => r !== query.trim())];
       return next.slice(0, 8);
     });
-    // optional: router.push(`/search?q=${encodeURIComponent(query.trim())}`)
   };
 
   const removeRecent = (name: string) => setRecent(prev => prev.filter(r => r !== name));
@@ -92,7 +91,7 @@ export default function Sidebar({ currentPage = 'profile' }: SidebarProps) {
     <>
       {/* LEFT NAV BAR */}
       <div className="fixed left-0 top-0 h-full w-64 bg-black border-r border-gray-800 flex flex-col z-30">
-        {/* Logo (click to Home) */}
+        {/* Logo */}
         <div className="p-6">
           <button
             onClick={() => { setActive('home'); router.push(routeById.home!); }}
@@ -113,9 +112,8 @@ export default function Sidebar({ currentPage = 'profile' }: SidebarProps) {
                   <button
                     type="button"
                     onClick={() => onClickItem(item.id)}
-                    className={`w-full flex items-center px-4 py-3 text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-colors ${
-                      isActive ? 'text-white bg-gray-800' : ''
-                    }`}
+                    className={`w-full flex items-center px-4 py-3 text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-colors ${isActive ? 'text-white bg-gray-800' : ''
+                      }`}
                   >
                     <Icon className="w-6 h-6 mr-3" />
                     <span className="font-medium">{item.label}</span>
@@ -132,16 +130,16 @@ export default function Sidebar({ currentPage = 'profile' }: SidebarProps) {
 
           <div className="border-t border-gray-800 my-4" />
 
-          {/* More */}
+          {/* ✅ Settings instead of More */}
           <ul className="space-y-1">
             <li>
               <button
                 type="button"
-                onClick={() => onClickItem('more')}
+                onClick={() => onClickItem('settings')}
                 className="w-full flex items-center px-4 py-3 text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
               >
-                <Bars3Icon className="w-6 h-6 mr-3" />
-                <span className="font-medium">More</span>
+                <Cog6ToothIcon className="w-6 h-6 mr-3" />
+                <span className="font-medium">Settings</span>
               </button>
             </li>
             <li>
@@ -172,7 +170,6 @@ export default function Sidebar({ currentPage = 'profile' }: SidebarProps) {
       {/* SEARCH PANEL (unchanged) */}
       {active === 'search' && (
         <div className="fixed top-0 left-64 h-full w-[24rem] bg-black border-r border-gray-800 z-20 flex flex-col" aria-label="Search panel">
-          {/* ... existing search UI ... */}
           <div className="px-6 pt-6 pb-4">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold text-white">Search</h2>
@@ -198,18 +195,17 @@ export default function Sidebar({ currentPage = 'profile' }: SidebarProps) {
             </form>
           </div>
           <div className="border-t border-gray-800" />
-          {/* ... recent list as you already have ... */}
         </div>
       )}
-        <CreatePostModal
-    open={openCreate}
-    onClose={() => setOpenCreate(false)}
-       onCreateLocal={async (payload) => {
-    await mockCreatePost(payload); // later: replace with real POST /posts
-    // optional: navigate or toast
-    // router.refresh(); // if using server components
-  }}
-  />
+
+      {/* Create Post Modal */}
+      <CreatePostModal
+        open={openCreate}
+        onClose={() => setOpenCreate(false)}
+        onCreateLocal={async (payload) => {
+          await mockCreatePost(payload);
+        }}
+      />
     </>
   );
 }
