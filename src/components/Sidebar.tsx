@@ -134,8 +134,8 @@ export default function Sidebar({ currentPage = 'profile' }: SidebarProps) {
           <ul className="space-y-1">
             <li>
               <button
+               onClick={() => router.push('../UserEditProfile')}
                 type="button"
-                onClick={() => onClickItem('settings')}
                 className="w-full flex items-center px-4 py-3 text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
               >
                 <Cog6ToothIcon className="w-6 h-6 mr-3" />
