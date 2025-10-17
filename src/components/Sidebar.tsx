@@ -112,7 +112,7 @@ export default function Sidebar({ currentPage = 'profile' }: SidebarProps) {
                   <button
                     type="button"
                     onClick={() => onClickItem(item.id)}
-                    className={`w-full flex items-center px-4 py-3 text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-colors ${isActive ? 'text-white bg-gray-800' : ''
+                    className={`w-full flex items-center px-4 py-3 text-gray-300 hover:text-white hover:bg-[#262626]  rounded-lg transition-colors ${isActive ? 'text-white bg-[#262626] ' : ''
                       }`}
                   >
                     <Icon className="w-6 h-6 mr-3" />
@@ -136,7 +136,7 @@ export default function Sidebar({ currentPage = 'profile' }: SidebarProps) {
               <button
                onClick={() => router.push('../UserEditProfile')}
                 type="button"
-                className="w-full flex items-center px-4 py-3 text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
+                className="w-full flex items-center px-4 py-3 text-gray-300 hover:text-white hover:bg-[#262626]  rounded-lg transition-colors"
               >
                 <Cog6ToothIcon className="w-6 h-6 mr-3" />
                 <span className="font-medium">Settings</span>
