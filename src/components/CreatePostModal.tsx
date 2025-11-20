@@ -1,8 +1,9 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { XMarkIcon, PhotoIcon, PlayCircleIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon, PhotoIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 import type { Category, Visibility } from './../types/posts';
+import { createPost } from '@/services/posts';
 
 type Props = {
   open: boolean;
@@ -17,7 +18,7 @@ type Step = 'pick' | 'compose';
 const categories: Category[] = ['academic','social','announcement','event','general'];
 const visibilities: Visibility[] = ['public','followers','private'];
 
-export default function CreatePostModal({ open, onClose, onCreateLocal }: Props) {
+export default function CreatePostModal({ open, onClose }: Props) {
   const [files, setFiles] = useState<File[]>([]);
   const [step, setStep] = useState<Step>('pick');
   const [activeIdx, setActiveIdx] = useState(0);
@@ -25,6 +26,8 @@ export default function CreatePostModal({ open, onClose, onCreateLocal }: Props)
   const [category, setCategory] = useState<Category>('general');
   const [visibility, setVisibility] = useState<Visibility>('public');
   const [groupId, setGroupId] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   const inputRef = useRef<HTMLInputElement | null>(null);
 
@@ -49,22 +52,33 @@ export default function CreatePostModal({ open, onClose, onCreateLocal }: Props)
   const onPick = () => inputRef.current?.click();
   const handleFiles = (list: FileList | null) => {
     if (!list?.length) return;
-    const arr = Array.from(list).filter(f => f.type.startsWith('image/') || f.type.startsWith('video/'));
-    if (!arr.length) return;
-    setFiles(prev => [...prev, ...arr].slice(0, 10));
+    const allowed = ['image/jpeg','image/jpg','image/png','image/gif','image/webp'];
+    const arr = Array.from(list).filter(f => allowed.includes(f.type) && f.size <= 5*1024*1024);
+    if (!arr.length) { setError('Invalid image type or file too large'); return; }
+    setFiles([arr[0]]);
     setStep('compose');
   };
   const onDrop = (e: React.DragEvent) => { e.preventDefault(); handleFiles(e.dataTransfer.files); };
 
   const activeFile = files[activeIdx];
   const activeURL = useMemo(() => (activeFile ? URL.createObjectURL(activeFile) : ''), [activeFile]);
-  const isVideo = activeFile?.type.startsWith('video/');
-  const canShare = files.length > 0 && caption.length <= 2200;
+  const canShare = files.length > 0 && caption.length <= 2200 && !uploading;
 
   const share = async () => {
     if (!canShare) return;
-    await onCreateLocal?.({ content: caption, category, visibility, media: files, groupId: groupId || undefined });
-    onClose();
+    setUploading(true);
+    setError(null);
+    try {
+      const post = await createPost(files[0], caption || undefined);
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('fg_post_created', { detail: post }));
+      }
+      onClose();
+    } catch (e: any) {
+      setError(e?.message || 'Failed to create post');
+    } finally {
+      setUploading(false);
+    }
   };
 
   if (!open) return null;
@@ -91,16 +105,13 @@ export default function CreatePostModal({ open, onClose, onCreateLocal }: Props)
           <div className="p-10 flex flex-col items-center justify-center min-h-[420px]"
                onDragOver={(e)=>e.preventDefault()} onDrop={onDrop}>
             <div className="w-20 h-20 rounded-full bg-gray-900 border border-gray-800 flex items-center justify-center mb-4">
-              <div className="flex -space-x-3">
-                <PhotoIcon className="w-10 h-10 text-gray-500" />
-                <PlayCircleIcon className="w-10 h-10 text-gray-600" />
-              </div>
+              <PhotoIcon className="w-10 h-10 text-gray-500" />
             </div>
             <p className="text-lg text-white mb-2">Drag photos and videos here</p>
             <button onClick={onPick} className="mt-2 bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-md text-sm font-medium">
               Select from computer
             </button>
-            <input ref={inputRef} type="file" accept="image/*,video/*" multiple hidden onChange={(e)=>handleFiles(e.target.files)} />
+            <input ref={inputRef} type="file" accept=".jpg,.jpeg,.png,.gif,.webp" hidden onChange={(e)=>handleFiles(e.target.files)} />
           </div>
         )}
 
@@ -121,12 +132,7 @@ export default function CreatePostModal({ open, onClose, onCreateLocal }: Props)
                 </>
               )}
               <div className="absolute inset-0">
-                {isVideo ? (
-                  <video src={activeURL} className="w-full h-full object-contain" controls />
-                ) : (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={activeURL} alt="preview" className="w-full h-full object-contain" />
-                )}
+                <img src={activeURL} alt="preview" className="w-full h-full object-contain" />
               </div>
             </div>
 
@@ -142,6 +148,7 @@ export default function CreatePostModal({ open, onClose, onCreateLocal }: Props)
                 className="bg-transparent border border-gray-800 rounded-lg p-3 text-sm h-36 resize-none outline-none focus:border-gray-600"
                 maxLength={2200} />
               <div className="text-right text-[11px] text-gray-500 mt-1">{caption.length}/2200</div>
+              {error && <div className="mt-2 text-xs text-red-400">{error}</div>}
 
               <div className="grid grid-cols-2 gap-3 mt-3">
                 <div>
@@ -172,7 +179,7 @@ export default function CreatePostModal({ open, onClose, onCreateLocal }: Props)
                           className={`px-4 py-1.5 rounded-md text-sm font-semibold ${
                             canShare ? 'bg-indigo-600 hover:bg-indigo-500 text-white' : 'bg-gray-700 text-gray-400 cursor-not-allowed'
                           }`}>
-                    Share
+                    {uploading ? 'Sharing…' : 'Share'}
                   </button>
                 </div>
               </div>

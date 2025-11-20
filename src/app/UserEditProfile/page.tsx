@@ -4,10 +4,13 @@ import type React from "react"
 
 import Sidebar from "@/components/Sidebar"
 import Settings from "@/components/Settings" // ✅ newly added
-import { useState, useRef } from "react"
+import { useEffect, useState, useRef } from "react"
+import { getMyProfile, updateMyProfile, changePassword, uploadProfileImage } from '@/services/users'
 
 export default function EditProfilePage() {
   const [profile, setProfile] = useState({
+    username: "",
+    email: "",
     firstName: "",
     lastName: "",
     bio: "",
@@ -18,6 +21,9 @@ export default function EditProfilePage() {
   })
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState("")
+  const [pwd, setPwd] = useState({ currentPassword: "", newPassword: "" })
+  const [pwdLoading, setPwdLoading] = useState(false)
+  const [pwdMsg, setPwdMsg] = useState("")
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
@@ -36,38 +42,83 @@ export default function EditProfilePage() {
     }
   }
 
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await getMyProfile();
+        const u = res.data.user;
+        const [firstName, ...rest] = u.fullName?.split(' ') || [''];
+        const lastName = rest.join(' ');
+        setProfile((prev) => ({
+          ...prev,
+          username: u.username || prev.username,
+          email: u.email || prev.email,
+          firstName: firstName || '',
+          lastName: lastName || '',
+          bio: u.bio || '',
+          avatarPreview: u.profilePictureUrl || prev.avatarPreview,
+        }));
+      } catch {}
+    })();
+  }, []);
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
     setMessage("")
 
-    const formData = new FormData()
-    formData.append("firstName", profile.firstName || "")
-    formData.append("lastName", profile.lastName || "")
-    formData.append("bio", profile.bio || "")
-    formData.append("department", profile.department || "")
-    formData.append("semester", profile.semester || "")
-
-    if (profile.avatar) {
-      formData.append("avatar", profile.avatar)
-    }
-
     try {
-      const res = await fetch("/users/profile", {
-        method: "PUT",
-        headers: {
-          Authorization: "Bearer <token>",
-        },
-        body: formData,
-      })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.message || "Failed to update profile")
-      setMessage("Profile updated successfully!")
-      setProfile((p) => ({ ...p, ...data.data }))
+      const fullName = `${profile.firstName} ${profile.lastName}`.trim();
+      const payload: any = { fullName, bio: profile.bio };
+      if (profile.username) payload.username = profile.username;
+      if (profile.email) payload.email = profile.email;
+      if (profile.avatar) {
+        try {
+          const url = await uploadProfileImage(profile.avatar);
+          payload.profilePictureUrl = url;
+        } catch (e: any) {
+          setMessage(e?.message || 'Profile picture upload failed');
+        }
+      }
+      const res = await updateMyProfile(payload);
+      setMessage("Profile updated successfully!");
+      const u = res.data.user;
+      const [firstName, ...rest] = u.fullName?.split(' ') || [''];
+      const lastName = rest.join(' ');
+      setProfile((p) => ({
+        ...p,
+        firstName: firstName || '',
+        lastName: lastName || '',
+        bio: u.bio || '',
+        avatarPreview: u.profilePictureUrl || p.avatarPreview,
+      }));
+      try {
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('fg_profile_updated', { detail: u }));
+        }
+      } catch {}
     } catch (err: any) {
-      setMessage(err.message || "Error updating profile")
+      setMessage(err?.message || "Error updating profile")
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function submitPassword(e: React.FormEvent) {
+    e.preventDefault();
+    if (pwdLoading) return;
+    setPwdLoading(true);
+    setPwdMsg("");
+    try {
+      const res = await changePassword({ currentPassword: pwd.currentPassword, newPassword: pwd.newPassword });
+      if (res.success) {
+        setPwdMsg("Password updated successfully!");
+        setPwd({ currentPassword: "", newPassword: "" });
+      }
+    } catch (err: any) {
+      setPwdMsg(err?.message || "Error updating password");
+    } finally {
+      setPwdLoading(false);
     }
   }
 
@@ -120,23 +171,47 @@ export default function EditProfilePage() {
                 </div>
               </div>
 
-              {/* Personal Information Section */}
-              <div className=" rounded-lg p-6 border border-gray-800">
-                <h3 className="text-sm font-bold text-gray-300 mb-4 uppercase tracking-wide">
-                  Personal Information
-                </h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-bold text-gray-300 mb-2">First Name</label>
-                    <input
-                      type="text"
-                      name="firstName"
-                      value={profile.firstName}
-                      onChange={handleChange}
-                      className="w-full px-4 py-2.5 rounded-md border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
-                      placeholder="Enter first name"
-                    />
-                  </div>
+            {/* Personal Information Section */}
+            <div className=" rounded-lg p-6 border border-gray-800">
+              <h3 className="text-sm font-bold text-gray-300 mb-4 uppercase tracking-wide">
+                Personal Information
+              </h3>
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                  <label className="block text-sm font-bold text-gray-300 mb-2">Username</label>
+                  <input
+                    type="text"
+                    name="username"
+                    value={profile.username}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2.5 rounded-md border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
+                    placeholder="Enter username"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-gray-300 mb-2">Email</label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={profile.email}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2.5 rounded-md border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
+                    placeholder="Enter email"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-bold text-gray-300 mb-2">First Name</label>
+                  <input
+                    type="text"
+                    name="firstName"
+                    value={profile.firstName}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2.5 rounded-md border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
+                    placeholder="Enter first name"
+                  />
+                </div>
 
                   <div>
                     <label className="block text-sm font-bold text-gray-300 mb-2">Last Name</label>
@@ -199,27 +274,66 @@ export default function EditProfilePage() {
                       placeholder="e.g., 4"
                     />
                   </div>
-                </div>
-              </div>
+            </div>
+          </div>
 
-              {/* Message Display */}
-              {message && (
-                <div
-                  className={`p-4 rounded-md text-sm font-medium ${message.includes("successfully") ? "bg-green-900 border border-green-700 text-green-200" : "bg-red-900 border border-red-700 text-red-200"}`}
+          {/* Message Display */}
+          {message && (
+            <div
+              className={`p-4 rounded-md text-sm font-medium ${message.includes("successfully") ? "bg-green-900 border border-green-700 text-green-200" : "bg-red-900 border border-red-700 text-red-200"}`}
+            >
+              {message}
+            </div>
+          )}
+
+          {/* Submit Button */}
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-blue-800 hover:bg-blue-900 cursor-pointer disabled:bg-gray-700 disabled:cursor-not-allowed py-3 rounded-md font-semibold text-base transition-colors duration-200"
+          >
+            {loading ? "Saving Changes..." : "Save Changes"}
+          </button>
+        </form>
+
+            {/* Change Password */}
+            <div className="mt-10 rounded-lg p-6 border border-gray-800">
+              <h3 className="text-sm font-bold text-gray-300 mb-4 uppercase tracking-wide">Change Password</h3>
+              <form onSubmit={submitPassword} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-bold text-gray-300 mb-2">Current Password</label>
+                    <input
+                      type="password"
+                      value={pwd.currentPassword}
+                      onChange={(e) => setPwd((p) => ({ ...p, currentPassword: e.target.value }))}
+                      className="w-full px-4 py-2.5 rounded-md border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
+                      placeholder="Enter current password"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-gray-300 mb-2">New Password</label>
+                    <input
+                      type="password"
+                      value={pwd.newPassword}
+                      onChange={(e) => setPwd((p) => ({ ...p, newPassword: e.target.value }))}
+                      className="w-full px-4 py-2.5 rounded-md border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
+                      placeholder="Enter new password"
+                    />
+                  </div>
+                </div>
+                {pwdMsg && (
+                  <div className={`p-4 rounded-md text-sm font-medium ${pwdMsg.includes("successfully") ? "bg-green-900 border border-green-700 text-green-200" : "bg-red-900 border border-red-700 text-red-200"}`}>{pwdMsg}</div>
+                )}
+                <button
+                  type="submit"
+                  disabled={pwdLoading}
+                  className="bg-blue-800 hover:bg-blue-900 cursor-pointer disabled:bg-gray-700 disabled:cursor-not-allowed px-4 py-2 rounded-md font-semibold"
                 >
-                  {message}
-                </div>
-              )}
-
-              {/* Submit Button */}
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-blue-800 hover:bg-blue-900 cursor-pointer disabled:bg-gray-700 disabled:cursor-not-allowed py-3 rounded-md font-semibold text-base transition-colors duration-200"
-              >
-                {loading ? "Saving Changes..." : "Save Changes"}
-              </button>
-            </form>
+                  {pwdLoading ? 'Updating...' : 'Update Password'}
+                </button>
+              </form>
+            </div>
           </div>
         </div>
       </div>

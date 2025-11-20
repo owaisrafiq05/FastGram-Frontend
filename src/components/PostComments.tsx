@@ -2,13 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import { PostComment } from './../types/posts';
-import { mockCreateComment, mockGetComments, mockDeleteComment } from '@/utils/mockApi';
+import { addComment as apiAddComment, getComments as apiGetComments, deleteComment as apiDeleteComment } from '@/services/posts';
 
 export default function PostComments({ postId }: { postId: string }) {
   const [comments, setComments] = useState<PostComment[]>([]);
   const [total, setTotal] = useState(0);
   const [hasMore, setHasMore] = useState(true);
-  const [offset, setOffset] = useState(0);
+  const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
 
   const [input, setInput] = useState('');
@@ -20,12 +20,12 @@ export default function PostComments({ postId }: { postId: string }) {
     let mounted = true;
     (async () => {
       setLoading(true);
-      const res = await mockGetComments(postId, 10, 0);
+      const res = await apiGetComments(postId, 1, 10);
       if (!mounted) return;
-      setComments(res.data.comments as any);
-      setTotal(res.data.total);
-      setHasMore(res.data.hasMore);
-      setOffset(res.data.comments.length);
+      setComments(res.comments as any);
+      setTotal(res.pagination?.totalComments ?? res.comments.length);
+      setHasMore((res.pagination?.page ?? 1) < (res.pagination?.totalPages ?? 1));
+      setPage(2);
       setLoading(false);
     })();
     return () => {
@@ -36,10 +36,10 @@ export default function PostComments({ postId }: { postId: string }) {
   const loadMore = async () => {
     if (loading || !hasMore) return;
     setLoading(true);
-    const res = await mockGetComments(postId, 10, offset);
-    setComments((prev) => [...prev, ...(res.data.comments as any)]);
-    setHasMore(res.data.hasMore);
-    setOffset((o) => o + res.data.comments.length);
+    const res = await apiGetComments(postId, page, 10);
+    setComments((prev) => [...prev, ...(res.comments as any)]);
+    setHasMore((res.pagination?.page ?? page) < (res.pagination?.totalPages ?? page));
+    setPage((pg) => pg + 1);
     setLoading(false);
   };
 
@@ -68,8 +68,8 @@ export default function PostComments({ postId }: { postId: string }) {
     setInput('');
 
     try {
-      const res = await mockCreateComment(postId, text);
-      setComments((prev) => prev.map((c) => (c.id === tempId ? (res.data as any) : c)));
+      const created = await apiAddComment(postId, text);
+      setComments((prev) => prev.map((c) => (c.id === tempId ? (created as any) : c)));
     } finally {
       setSending(false);
     }
@@ -85,12 +85,7 @@ export default function PostComments({ postId }: { postId: string }) {
     setTotal((t) => Math.max(0, t - 1));
 
     try {
-      const res = await mockDeleteComment(id);
-      if (!res.success) {
-        // rollback on failure
-        setComments(snapshot);
-        setTotal((t) => t + 1);
-      }
+      await apiDeleteComment(postId, id);
     } finally {
       setDeletingId(null);
     }

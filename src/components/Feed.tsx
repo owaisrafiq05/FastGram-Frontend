@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Category, PostDetail } from './../types/posts';
-import { mockGetFeed, mockDeletePost } from '@/utils/mockApi';
+import { getFeedTimeline, deletePost } from '@/services/posts';
 import PostCard from '@/components/PostCard';
 import PostDetailDrawer from '@/components/PostDetailDrawer';
 import ConfirmDialog from '@/components/ConfirmDialog';
@@ -19,7 +19,7 @@ const tabs: { key?: Category; label: string }[] = [
 export default function Feed() {
   const [posts, setPosts] = useState<PostDetail[]>([]);
   const [category, setCategory] = useState<Category | undefined>(undefined);
-  const [offset, setOffset] = useState(0);
+  const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(false);
 
@@ -31,11 +31,11 @@ export default function Feed() {
     let mounted = true;
     (async () => {
       setLoading(true);
-      const res = await mockGetFeed({ limit: 5, offset: 0, category });
+      const res = await getFeedTimeline(1, 10);
       if (!mounted) return;
-      setPosts(res.data.posts);
-      setOffset(res.data.posts.length);
-      setHasMore(res.data.hasMore);
+      setPosts(res.posts);
+      setPage(2);
+      setHasMore(res.posts.length > 0);
       setLoading(false);
     })();
     return () => {
@@ -43,13 +43,36 @@ export default function Feed() {
     };
   }, [category]);
 
+  useEffect(() => {
+    const handler = (e: any) => {
+      const post = e?.detail as PostDetail;
+      if (post) setPosts((prev) => [post, ...prev]);
+    };
+    if (typeof window !== 'undefined') {
+      window.addEventListener('fg_post_created', handler as any);
+      return () => window.removeEventListener('fg_post_created', handler as any);
+    }
+  }, []);
+
+  useEffect(() => {
+    const onUpdated = (e: any) => {
+      const updated = e?.detail as PostDetail;
+      if (!updated) return;
+      setPosts((prev) => prev.map((p) => (p.id === updated.id ? { ...p, content: updated.content } : p)));
+    };
+    if (typeof window !== 'undefined') {
+      window.addEventListener('fg_post_updated', onUpdated as any);
+      return () => window.removeEventListener('fg_post_updated', onUpdated as any);
+    }
+  }, []);
+
   const loadMore = async () => {
     if (loading || !hasMore) return;
     setLoading(true);
-    const res = await mockGetFeed({ limit: 5, offset, category });
-    setPosts((p) => [...p, ...res.data.posts]);
-    setOffset((o) => o + res.data.posts.length);
-    setHasMore(res.data.hasMore);
+    const res = await getFeedTimeline(page, 10);
+    setPosts((p) => [...p, ...res.posts]);
+    setPage((pg) => pg + 1);
+    setHasMore(res.posts.length > 0);
     setLoading(false);
   };
 
@@ -58,16 +81,11 @@ export default function Feed() {
     const id = openDeleteId;
     setOpenDeleteId(null);
 
-    // optimistic remove
     setPosts((prev) => prev.filter((p) => p.id !== id));
     if (selected === id) setSelected(null);
-
-    // mock backend (later replace with DELETE /posts/:id)
-    const res = await mockDeletePost(id);
-    if (!res.success) {
-      // optional: toast/rollback
-      console.warn('Delete failed (mock).');
-    }
+    try {
+      await deletePost(id);
+    } catch {}
   };
 
   return (

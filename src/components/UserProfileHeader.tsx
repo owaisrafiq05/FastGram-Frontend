@@ -1,7 +1,8 @@
 'use client';
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Cog6ToothIcon, PlusIcon, PlayIcon } from '@heroicons/react/24/outline';
+import { followUser, unfollowUser } from '@/services/users';
 
 type UserProfile = {
   id: string;
@@ -28,38 +29,34 @@ type Props = {
 
 export default function UserProfileHeader({ userProfile, isCurrentUser = true }: Props) {
   const router = useRouter();
-  // ---- Mock (used only when userProfile prop not provided) ----
-  const mockProfile: UserProfile = {
-    id: '1',
-    username: '_muhib_ali',
-    firstName: 'Muhib',
-    lastName: 'Ali',
-    bio:
-      "Software Engineer from Karachi, Pk 🇵🇰\n" +
-      "10x National Hackathon Winner 💻\n" +
-      "Engineering @NovaSphere Sol\n" +
-      "🎓 FAST NUCES '27\n" +
-      '🔗 https_owais',
-    avatarUrl: '/images/portrait-avatar.png',
-    department: 'Computer Science',
-    semester: 7,
-    program: 'BSCS',
-    batchYear: 2027,
-    followersCount: 70,
-    followingCount: 94,
-    postsCount: 3,
-    isFollowing: false,
-  };
-
-  // Prefer prop, else mock
-  const profile = useMemo(() => userProfile ?? mockProfile, [userProfile]);
+  const hasData = !!userProfile;
+  const profile: UserProfile = useMemo(() => (
+    userProfile ?? {
+      id: '', username: '', firstName: '', lastName: '', bio: '', avatarUrl: '',
+      department: '', semester: 0, program: '', batchYear: 0,
+      followersCount: 0, followingCount: 0, postsCount: 0, isFollowing: false,
+    }
+  ), [userProfile]);
 
   // Follow state seeds from profile
-  const [isFollowing, setIsFollowing] = useState<boolean>(!!profile.isFollowing);
+  const [isFollowing, setIsFollowing] = useState<boolean>(false);
+  useEffect(() => {
+    setIsFollowing(!!profile.isFollowing);
+  }, [profile.isFollowing]);
 
   // Handlers
-  const toggleFollow = () => setIsFollowing((v) => !v);
+  const toggleFollow = async () => {
+    const next = !isFollowing;
+    setIsFollowing(next);
+    try {
+      if (next) await followUser(profile.username);
+      else await unfollowUser(profile.username);
+    } catch {
+      setIsFollowing(!next);
+    }
+  };
 
+  if (!hasData) return null;
   return (
     <>
     <div className='flex justify-center items-center'>

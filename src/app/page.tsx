@@ -1,7 +1,9 @@
-'use client';
+"use client";
 
 import Sidebar from '@/components/Sidebar';
 import FloatingMessages from '@/components/FloatingMessages';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   EllipsisHorizontalIcon,
   HeartIcon,
@@ -63,6 +65,12 @@ const suggestions = [
 ];
 
 export default function HomePage() {
+  const router = useRouter();
+  useEffect(() => {
+    router.replace('/Home');
+  }, [router]);
+  return null;
+  /*
   return (
     <div className="min-h-screen bg-black text-white flex">
       {/* Left Sidebar */}
@@ -125,6 +133,7 @@ export default function HomePage() {
       <FloatingMessages />
     </div>
   );
+  */
 }
 
 /* ------------------------- sub-components ------------------------- */

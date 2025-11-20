@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
-import { PostDetail } from './../types/posts';          // ✅ fix path
-import { mockGetPost } from '@/utils/mockApi';
+import { PostDetail } from './../types/posts';
+import { getPost } from '@/services/posts';
+import { updatePostCaption } from '@/services/posts';
 import PostComments from '@/components/PostComments';
 
 export default function PostDetailDrawer({
@@ -16,12 +17,16 @@ export default function PostDetailDrawer({
   onRequestDelete?: (id: string) => void; // ✅ NEW
 }) {
   const [post, setPost] = useState<PostDetail | null>(null);
+  const [editing, setEditing] = useState(false);
+  const [caption, setCaption] = useState('');
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!postId) return;
     (async () => {
-      const res = await mockGetPost(postId);
-      setPost(res.data as any);
+      const res = await getPost(postId);
+      setPost(res as any);
+      setCaption(res.content || '');
     })();
   }, [postId]);
 
@@ -35,7 +40,7 @@ export default function PostDetailDrawer({
         <div className="flex items-center justify-between px-4 py-3 border-b border-gray-800">
           <div className="text-white font-semibold">Post</div>
           <div className="flex items-center gap-2">
-            {post && (post.canDelete || post.user.id === 'u_me') &&  (
+            {post && post.canDelete &&  (
               <button
                 onClick={() => onRequestDelete?.(post.id)}   // ✅ call parent trigger
                 className="px-3 py-1.5 text-sm rounded bg-red-600 hover:bg-red-500 text-white"
@@ -43,11 +48,52 @@ export default function PostDetailDrawer({
                 Delete
               </button>
             )}
+            {post && post.canDelete && (
+              <button
+                onClick={() => setEditing((v)=>!v)}
+                className="px-3 py-1.5 text-sm rounded bg-gray-800 hover:bg-gray-700 text-white"
+              >
+                {editing ? 'Cancel' : 'Edit'}
+              </button>
+            )}
             <button onClick={onClose} className="p-2 rounded hover:bg-gray-800" aria-label="Close">
               <XMarkIcon className="w-5 h-5 text-gray-300" />
             </button>
           </div>
         </div>
+
+        {editing && post && (
+          <div className="px-4 py-3 border-b border-gray-800 flex items-center gap-2">
+            <input
+              value={caption}
+              onChange={(e)=>setCaption(e.target.value)}
+              maxLength={2200}
+              className="flex-1 bg-black border border-gray-700 rounded p-2 text-sm text-white"
+            />
+            <button
+              disabled={saving}
+              onClick={async ()=>{
+                if (!post) return;
+                setSaving(true);
+                try {
+                  const updated = await updatePostCaption(post.id, caption);
+                  setPost(updated as any);
+                  setEditing(false);
+                  try {
+                    if (typeof window !== 'undefined') {
+                      window.dispatchEvent(new CustomEvent('fg_post_updated', { detail: updated }));
+                    }
+                  } catch {}
+                } catch {} finally {
+                  setSaving(false);
+                }
+              }}
+              className="px-3 py-1.5 text-sm rounded bg-blue-600 hover:bg-blue-500 text-white disabled:opacity-60"
+            >
+              {saving ? 'Saving…' : 'Save'}
+            </button>
+          </div>
+        )}
 
         {/* Body */}
         {!post ? (

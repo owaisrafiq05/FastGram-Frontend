@@ -9,7 +9,8 @@ import {
   EllipsisHorizontalIcon,
 } from '@heroicons/react/24/outline';
 import { useState } from 'react';
-import { PostDetail } from './../types/posts'; // ✅ fix path
+import { PostDetail } from './../types/posts';
+import { likePost, unlikePost } from '@/services/posts';
 
 export default function PostCard({
   post,
@@ -21,7 +22,8 @@ export default function PostCard({
   onRequestDelete?: (id: string) => void;
 }) {
   const [liked, setLiked] = useState(post.isLiked);
-  const isMine = post.canDelete || post.user?.id === 'u_me';
+  const [likeBusy, setLikeBusy] = useState(false);
+  const isMine = !!post.canDelete;
 
   return (
     <article className="border border-gray-800 rounded-lg overflow-hidden">
@@ -70,7 +72,20 @@ export default function PostCard({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <button
-              onClick={() => setLiked((v) => !v)}
+              onClick={async () => {
+                if (likeBusy) return;
+                setLikeBusy(true);
+                const next = !liked;
+                setLiked(next);
+                try {
+                  if (next) await likePost(post.id);
+                  else await unlikePost(post.id);
+                } catch {
+                  setLiked(!next);
+                } finally {
+                  setLikeBusy(false);
+                }
+              }}
               className={`p-1 rounded hover:bg-gray-800 ${
                 liked ? 'text-red-500' : 'text-white'
               }`}

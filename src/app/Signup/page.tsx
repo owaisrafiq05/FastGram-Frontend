@@ -4,6 +4,8 @@ import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import loginImg from '../../../public/images/fastgram-login-img.png';
+import { register } from '@/services/auth';
+import { useSearchParams } from 'next/navigation';
 
 export default function Signup() {
   const [formData, setFormData] = useState({
@@ -17,15 +19,37 @@ export default function Signup() {
     program: '',
     batchYear: ''
   });
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const searchParams = useSearchParams();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Form submitted:', formData);
+    if (submitting) return;
+    setSubmitting(true);
+    setError(null);
+    try {
+      const fullName = `${formData.firstName} ${formData.lastName}`.trim();
+      const res = await register({
+        username: formData.username,
+        email: formData.email,
+        password: formData.password,
+        fullName,
+      });
+      if (res.success) {
+        const next = searchParams.get('next') || '/';
+        window.location.href = next;
+      }
+    } catch (err: any) {
+      setError(err?.message || 'Signup failed');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const departments = [
@@ -216,17 +240,22 @@ export default function Signup() {
 
                 <button
                   type="submit"
-                  className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded mt-4"
+                  disabled={submitting}
+                  className="w-full bg-blue-500 hover:bg-blue-600 disabled:bg-gray-700 disabled:cursor-not-allowed text-white font-semibold py-2 px-4 rounded mt-4"
                 >
-                  Sign up
+                  {submitting ? 'Signing up...' : 'Sign up'}
                 </button>
               </form>
+
+              {error && (
+                <div className="mt-4 text-sm text-red-400">{error}</div>
+              )}
             </div>
 
             <div className="bg-black border w-[80%] border-gray-700 rounded-sm p-6 text-center">
               <p className="text-gray-400">
                 Have an account?{' '}
-                <Link href="/Login" className="text-blue-400 font-semibold">
+                <Link href="/login" className="text-blue-400 font-semibold">
                   Log in
                 </Link>
               </p>

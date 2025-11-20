@@ -4,18 +4,36 @@ import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import loginImg from '../../../public/images/fastgram-login-img.png';
+import { login } from '@/services/auth';
+import { useSearchParams } from 'next/navigation';
 
 export default function Login() {
   const [formData, setFormData] = useState({ email: '', password: '' });
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const searchParams = useSearchParams();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Login submitted:', formData);
+    if (submitting) return;
+    setSubmitting(true);
+    setError(null);
+    try {
+      const res = await login({ email: formData.email, password: formData.password });
+      if (res.success) {
+        const next = searchParams.get('next') || '/Home';
+        window.location.href = next;
+      }
+    } catch (err: any) {
+      setError(err?.message || 'Login failed');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -70,11 +88,16 @@ export default function Login() {
 
                 <button
                   type="submit"
-                  className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded mt-4"
+                  disabled={submitting}
+                  className="w-full bg-blue-500 hover:bg-blue-600 disabled:bg-gray-700 disabled:cursor-not-allowed text-white font-semibold py-2 px-4 rounded mt-4"
                 >
-                  Log in
+                  {submitting ? 'Logging in...' : 'Log in'}
                 </button>
               </form>
+
+              {error && (
+                <div className="mt-4 text-sm text-red-400">{error}</div>
+              )}
 
               <div className="flex items-center my-6">
                 <div className="flex-1 border-t border-gray-600"></div>

@@ -9,6 +9,8 @@ import {
   ChatBubbleLeftRightIcon, HeartIcon, PlusCircleIcon, UserCircleIcon,
   Cog6ToothIcon, Squares2X2Icon, XMarkIcon,
 } from '@heroicons/react/24/outline'; // ✅ replaced Bars3Icon with Cog6ToothIcon
+import { logout } from '@/services/auth';
+import { getUserByUsername } from '@/services/users';
 
 type NavId =
   | 'home' | 'search' | 'explore' | 'reels' | 'messages'
@@ -24,6 +26,8 @@ export default function Sidebar({ currentPage = 'profile' }: SidebarProps) {
   const [recent, setRecent] = useState<string[]>(['https_owais']);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
   const [openCreate, setOpenCreate] = useState(false);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchResult, setSearchResult] = useState<any | null>(null);
 
   const routeById: Partial<Record<NavId, string>> = {
     home: '/Home',
@@ -77,12 +81,39 @@ export default function Sidebar({ currentPage = 'profile' }: SidebarProps) {
 
   const submitSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!query.trim()) return;
+    const name = query.trim();
+    if (!name) return;
     setRecent(prev => {
-      const next = [query.trim(), ...prev.filter(r => r !== query.trim())];
+      const next = [name, ...prev.filter(r => r !== name)];
       return next.slice(0, 8);
     });
+    router.push(`/u/${encodeURIComponent(name)}`);
   };
+
+  useEffect(() => {
+    let t: any;
+    if (active === 'search') {
+      const name = query.trim();
+      if (name.length >= 2) {
+        setSearchLoading(true);
+        setSearchResult(null);
+        t = setTimeout(async () => {
+          try {
+            const res = await getUserByUsername(name);
+            setSearchResult(res.data.user);
+          } catch {
+            setSearchResult(null);
+          } finally {
+            setSearchLoading(false);
+          }
+        }, 300);
+      } else {
+        setSearchResult(null);
+        setSearchLoading(false);
+      }
+    }
+    return () => t && clearTimeout(t);
+  }, [active, query]);
 
   const removeRecent = (name: string) => setRecent(prev => prev.filter(r => r !== name));
   const clearAll = () => setRecent([]);
@@ -145,6 +176,15 @@ export default function Sidebar({ currentPage = 'profile' }: SidebarProps) {
             <li>
               <button
                 type="button"
+                onClick={async () => { try { await logout(); } catch {} finally { router.push('/login'); } }}
+                className="w-full flex items-center px-4 py-3 text-gray-300 hover:text-white hover:bg-[#262626] rounded-lg transition-colors"
+              >
+                Logout
+              </button>
+            </li>
+            <li>
+              <button
+                type="button"
                 onClick={() => onClickItem('also-from-meta')}
                 className="w-full flex items-center px-4 py-3 text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
               >
@@ -155,19 +195,19 @@ export default function Sidebar({ currentPage = 'profile' }: SidebarProps) {
           </ul>
         </nav>
 
-        {/* Bottom user */}
+        {/* Bottom user (minimal) */}
         <div className="p-4 border-t border-gray-800">
           <div className="flex items-center px-4 py-3">
             <img src="/images/portrait-avatar.png" alt="Profile" className="w-8 h-8 rounded-full mr-3" />
             <div>
-              <div className="text-white font-medium text-sm">muhib_ali</div>
-              <div className="text-gray-400 text-xs">Muhib Ali</div>
+              <div className="text-white font-medium text-sm">Profile</div>
+              <div className="text-gray-400 text-xs">Signed In</div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* SEARCH PANEL (unchanged) */}
+      {/* SEARCH PANEL */}
       {active === 'search' && (
         <div className="fixed top-0 left-64 h-full w-[24rem] bg-black border-r border-gray-800 z-20 flex flex-col" aria-label="Search panel">
           <div className="px-6 pt-6 pb-4">
@@ -193,6 +233,26 @@ export default function Sidebar({ currentPage = 'profile' }: SidebarProps) {
                 )}
               </div>
             </form>
+            <div className="mt-4">
+              {searchLoading && (
+                <div className="text-gray-400 text-sm">Searching…</div>
+              )}
+              {!searchLoading && query.trim().length >= 2 && !searchResult && (
+                <div className="text-gray-500 text-sm">No user found</div>
+              )}
+              {!searchLoading && searchResult && (
+                <button
+                  onClick={() => router.push(`/u/${encodeURIComponent(searchResult.username)}`)}
+                  className="w-full flex items-center gap-3 px-4 py-2 rounded hover:bg-[#262626] text-left"
+                >
+                  <img src={searchResult.profilePictureUrl || '/images/portrait-avatar.png'} alt={searchResult.username} className="w-8 h-8 rounded-full" />
+                  <div>
+                    <div className="text-white text-sm font-medium">{searchResult.username}</div>
+                    <div className="text-xs text-gray-400">{searchResult.fullName}</div>
+                  </div>
+                </button>
+              )}
+            </div>
           </div>
           <div className="border-t border-gray-800" />
         </div>
@@ -202,9 +262,6 @@ export default function Sidebar({ currentPage = 'profile' }: SidebarProps) {
       <CreatePostModal
         open={openCreate}
         onClose={() => setOpenCreate(false)}
-        onCreateLocal={async (payload) => {
-          await mockCreatePost(payload);
-        }}
       />
     </>
   );
