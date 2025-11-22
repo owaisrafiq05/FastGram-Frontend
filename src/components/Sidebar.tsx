@@ -7,14 +7,14 @@ import { mockCreatePost } from './../utils/mockApi';
 import {
   HomeIcon, MagnifyingGlassIcon, MapIcon, PlayIcon,
   ChatBubbleLeftRightIcon, HeartIcon, PlusCircleIcon, UserCircleIcon,
-  Cog6ToothIcon, Squares2X2Icon, XMarkIcon,
+  Cog6ToothIcon, Squares2X2Icon, XMarkIcon, UserGroupIcon,
 } from '@heroicons/react/24/outline'; // ✅ replaced Bars3Icon with Cog6ToothIcon
 import { logout } from '@/services/auth';
 import { getUserByUsername } from '@/services/users';
 
 type NavId =
   | 'home' | 'search' | 'explore' | 'reels' | 'messages'
-  | 'notifications' | 'create' | 'profile' | 'settings' | 'also-from-meta'; // ✅ changed 'more' to 'settings'
+  | 'notifications' | 'create' | 'profile' | 'groups' | 'settings' | 'also-from-meta'; // ✅ changed 'more' to 'settings'
 
 interface SidebarProps { currentPage?: NavId }
 
@@ -37,6 +37,7 @@ export default function Sidebar({ currentPage = 'profile' }: SidebarProps) {
     messages: '/Messages',
     notifications: '/Notifications',
     create: '/Create',
+    groups: '/Groups',
     settings: '/Settings', // ✅ optional: add a route if you have a settings page
   };
 
@@ -59,6 +60,7 @@ export default function Sidebar({ currentPage = 'profile' }: SidebarProps) {
       },
       { id: 'notifications' as const, label: 'Notifications', icon: HeartIcon },
       { id: 'create' as const, label: 'Create', icon: PlusCircleIcon },
+      { id: 'groups' as const, label: 'Groups', icon: UserGroupIcon },
       { id: 'profile' as const, label: 'Profile', icon: UserCircleIcon },
     ],
     [unreadMessages]
