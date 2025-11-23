@@ -31,6 +31,7 @@ import {
   listGroupPosts,
   deleteGroupPost,
   listMyGroups,
+  listGroupsByUser,
 } from '@/services/groups';
 import { getMyProfile, getUserByUsername } from '@/services/users';
 import type { Group, GroupMember, GroupPost } from '@/types/groups';
@@ -51,8 +52,11 @@ export default function GroupsPage() {
 
   useEffect(() => {
     loadCurrentUser();
-    loadMyGroups();
   }, []);
+
+  useEffect(() => {
+    if (currentUserId) loadGroupsForUser(currentUserId);
+  }, [currentUserId]);
 
   const loadCurrentUser = async () => {
     try {
@@ -69,6 +73,15 @@ export default function GroupsPage() {
       setGroups(groupsList);
     } catch (err) {
       console.error('Failed to load groups:', err);
+    }
+  };
+
+  const loadGroupsForUser = async (userId: number) => {
+    try {
+      const groupsList = await listGroupsByUser(userId);
+      setGroups(groupsList);
+    } catch (err) {
+      console.error('Failed to load user groups:', err);
     }
   };
 

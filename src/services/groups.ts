@@ -136,6 +136,16 @@ export async function listMyGroups(): Promise<Group[]> {
   return (json.data?.groups || []).map(mapGroupFromAPI);
 }
 
+export async function listGroupsByUser(userId: number, page = 1, limit = 50): Promise<Group[]> {
+  const token = authStorage.getAccessToken();
+  const res = await fetchWithAuth(`${API_BASE}/api/groups/user/${userId}?page=${page}&limit=${limit}`, {
+    method: 'GET',
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+  });
+  const json = await handleJson<any>(res);
+  return (json.data?.groups || []).map(mapGroupFromAPI);
+}
+
 // ========== Member Management ==========
 
 export async function addMember(groupId: number, payload: AddMemberPayload): Promise<void> {
